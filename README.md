@@ -43,3 +43,10 @@
 
 ## 🏗️ Архитектура проекта
 
+Frontend (Next.js) → API Gateway (FastAPI)
+↓
+PostgreSQL (через SQLAlchemy)
+↓
+Prometheus ← Metrics / Exporters
+↓
+Grafana Dashboard
