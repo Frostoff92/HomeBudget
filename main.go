@@ -5,13 +5,58 @@ import (
 	"time"
 )
 
-type Purchace struct {
+type Purchase struct {
 	ID          string
 	Date        time.Time
 	Store       string
 	AmountCents int64
 	Category    string
-	ExpenseType string
+	ExpenseType ExpenseType
+}
+
+type ExpenseType string
+
+const (
+	ExpenseRegular ExpenseType = "regular"
+	ExpenseOneTime ExpenseType = "one_time"
+	ExpenseUnknown ExpenseType = "unknown"
+)
+
+func (e ExpenseType) IsValid() bool {
+	switch e {
+	case ExpenseRegular, ExpenseOneTime, ExpenseUnknown:
+		return true
+	default:
+		return false
+	}
+}
+
+func (p Purchase) Validate() error {
+	if p.ID == "" {
+		return fmt.Errorf("purchase ID is empty")
+	}
+
+	if p.Date.IsZero() {
+		return fmt.Errorf("purchase date is empty")
+	}
+
+	if p.Store == "" {
+		return fmt.Errorf("store is empty")
+	}
+
+	if p.AmountCents <= 0 {
+		return fmt.Errorf("amount must be greater than zero")
+	}
+
+	if p.Category == "" {
+		return fmt.Errorf("category is empty")
+	}
+
+	if !p.ExpenseType.IsValid() {
+		return fmt.Errorf("invalid expense type: %s", p.ExpenseType)
+	}
+
+	return nil
 }
 
 func formatMoney(cents int64) string {
@@ -19,7 +64,7 @@ func formatMoney(cents int64) string {
 }
 
 func main() {
-	purchace := Purchace{
+	purchase := Purchase{
 		ID:          "HB-000001",
 		Date:        time.Date(2026, 9, 19, 0, 0, 0, 0, time.Local),
 		Store:       "Lidl",
@@ -28,13 +73,22 @@ func main() {
 		ExpenseType: "regular",
 	}
 
+	err := purchase.Validate()
+
+	if err != nil {
+		fmt.Println("Validation error", err)
+		return
+	}
+
+	fmt.Println("Purchase is valid")
+
 	fmt.Printf(
 		"%s | %s | %s | %s | %s | %s\n",
-		purchace.ID,
-		purchace.Date.Format("2006-01-02"),
-		purchace.Store,
-		formatMoney(purchace.AmountCents),
-		purchace.Category,
-		purchace.ExpenseType,
+		purchase.ID,
+		purchase.Date.Format("2006-01-02"),
+		purchase.Store,
+		formatMoney(purchase.AmountCents),
+		purchase.Category,
+		purchase.ExpenseType,
 	)
 }
