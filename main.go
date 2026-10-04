@@ -33,11 +33,11 @@ func (e ExpenseType) IsValid() bool {
 
 func (p Purchase) Validate() error {
 	if p.ID == "" {
-		return fmt.Errorf("purchase ID is empty")
+		return fmt.Errorf("purchases ID is empty")
 	}
 
 	if p.Date.IsZero() {
-		return fmt.Errorf("purchase date is empty")
+		return fmt.Errorf("purchases date is empty")
 	}
 
 	if p.Store == "" {
@@ -64,31 +64,51 @@ func formatMoney(cents int64) string {
 }
 
 func main() {
-	purchase := Purchase{
-		ID:          "HB-000001",
-		Date:        time.Date(2026, 9, 19, 0, 0, 0, 0, time.Local),
-		Store:       "Lidl",
-		AmountCents: 1692,
-		Category:    "groceries",
-		ExpenseType: "regular",
+	purchases := []Purchase{
+		{
+			ID:          "HB-000001",
+			Date:        time.Date(2026, 9, 19, 0, 0, 0, 0, time.Local),
+			Store:       "Lidl",
+			AmountCents: 1692,
+			Category:    "groceries",
+			ExpenseType: ExpenseRegular,
+		},
+		{
+			ID:          "HB-000002",
+			Date:        time.Date(2026, 9, 13, 0, 0, 0, 0, time.Local),
+			Store:       "Lidl",
+			AmountCents: 0,
+			Category:    "groceries",
+			ExpenseType: ExpenseRegular,
+		},
+		{
+			ID:          "HB-000003",
+			Date:        time.Date(2026, 9, 25, 0, 0, 0, 0, time.Local),
+			Store:       "Lidl",
+			AmountCents: 3064,
+			Category:    "groceries",
+			ExpenseType: ExpenseRegular,
+		},
 	}
 
-	err := purchase.Validate()
+	fmt.Println(len(purchases))
 
-	if err != nil {
-		fmt.Println("Validation error", err)
-		return
+	var total int64
+
+	for _, purchase := range purchases {
+
+		err := purchase.Validate()
+
+		if err != nil {
+			fmt.Println("Validation error:", err)
+			continue
+		}
+
+		total += purchase.AmountCents
+
+		fmt.Println(purchase.ID)
 	}
 
-	fmt.Println("Purchase is valid")
+	fmt.Println("Total:", formatMoney(total))
 
-	fmt.Printf(
-		"%s | %s | %s | %s | %s | %s\n",
-		purchase.ID,
-		purchase.Date.Format("2006-01-02"),
-		purchase.Store,
-		formatMoney(purchase.AmountCents),
-		purchase.Category,
-		purchase.ExpenseType,
-	)
 }
