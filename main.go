@@ -63,6 +63,39 @@ func formatMoney(cents int64) string {
 	return fmt.Sprintf("%d.%02d EUR", cents/100, cents%100)
 }
 
+func calculateTotal(purchases []Purchase) int64 {
+	var total int64
+
+	for _, purchase := range purchases {
+		err := purchase.Validate()
+		if err != nil {
+			continue
+		}
+
+		total += purchase.AmountCents
+	}
+
+	return total
+}
+
+func calculateTotalStore(purchases []Purchase, store string) int64 {
+	var totalStore int64
+
+	for _, purchase := range purchases {
+		err := purchase.Validate()
+		if err != nil {
+			continue
+		}
+		if store != purchase.Store {
+			continue
+		}
+
+		totalStore += purchase.AmountCents
+	}
+
+	return totalStore
+}
+
 func main() {
 	purchases := []Purchase{
 		{
@@ -84,7 +117,7 @@ func main() {
 		{
 			ID:          "HB-000003",
 			Date:        time.Date(2026, 9, 25, 0, 0, 0, 0, time.Local),
-			Store:       "Lidl",
+			Store:       "Kaufland",
 			AmountCents: 3064,
 			Category:    "groceries",
 			ExpenseType: ExpenseRegular,
@@ -93,7 +126,9 @@ func main() {
 
 	fmt.Println(len(purchases))
 
-	var total int64
+	fmt.Println("Total:", formatMoney(calculateTotal(purchases)))
+
+	fmt.Println("Lidl total:", formatMoney(calculateTotalStore(purchases, "Lidl")))
 
 	for _, purchase := range purchases {
 
@@ -104,11 +139,7 @@ func main() {
 			continue
 		}
 
-		total += purchase.AmountCents
-
 		fmt.Println(purchase.ID)
 	}
-
-	fmt.Println("Total:", formatMoney(total))
 
 }
