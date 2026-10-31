@@ -117,7 +117,7 @@ func main() {
 		{
 			ID:          "HB-000003",
 			Date:        time.Date(2026, 9, 25, 0, 0, 0, 0, time.Local),
-			Store:       "Kaufland",
+			Store:       "Lidl",
 			AmountCents: 3064,
 			Category:    "groceries",
 			ExpenseType: ExpenseRegular,
