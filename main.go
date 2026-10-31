@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -111,20 +112,39 @@ func parseMoney(value string) (int64, error) {
 		return 0, fmt.Errorf("invalid money format: %s", value)
 	}
 
+	if strings.HasPrefix(value, "-") {
+		return 0, fmt.Errorf("negative amount isn't allowed: %s", value)
+	}
+
+	if strings.HasPrefix(parts[1], "+") {
+		return 0, fmt.Errorf("plus sign isn't allowed in cents: %s", value)
+	}
+
 	euros, err := strconv.ParseInt(parts[0], 10, 64)
 	if err != nil {
 		return 0, err
 	}
+	if euros < 0 {
+		return 0, fmt.Errorf("incorrect amount: %s", value)
+	}
 
 	cents, err := strconv.ParseInt(parts[1], 10, 64)
+
 	if err != nil {
 		return 0, err
+	}
+
+	if cents < 0 {
+		return 0, fmt.Errorf("incorrect cents")
 	}
 
 	if len(parts[1]) == 1 {
 		cents = cents * 10
 	}
 
+	if euros > (math.MaxInt64-cents)/100 {
+		return 0, fmt.Errorf("maximum value exceeded")
+	}
 	amountCents := euros*100 + cents
 
 	return amountCents, nil
