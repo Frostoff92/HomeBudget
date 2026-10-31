@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -96,6 +100,36 @@ func calculateTotalStore(purchases []Purchase, store string) int64 {
 	return totalStore
 }
 
+func parseMoney(value string) (int64, error) {
+	parts := strings.Split(value, ",")
+
+	if len(parts) != 2 {
+		return 0, fmt.Errorf("invalid money format: %s", value)
+	}
+
+	if len(parts[1]) < 1 || len(parts[1]) > 2 {
+		return 0, fmt.Errorf("invalid money format: %s", value)
+	}
+
+	euros, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	cents, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(parts[1]) == 1 {
+		cents = cents * 10
+	}
+
+	amountCents := euros*100 + cents
+
+	return amountCents, nil
+}
+
 func main() {
 	purchases := []Purchase{
 		{
@@ -141,5 +175,40 @@ func main() {
 
 		fmt.Println(purchase.ID)
 	}
+
+	file, err := os.Open("receipts.csv")
+	if err != nil {
+		fmt.Println("File error:", err)
+		return
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	reader.Comma = ';'
+
+	record, err := reader.Read()
+	if err != nil {
+		fmt.Println("CSV error:", err)
+		return
+	}
+	fmt.Println(record)
+
+	purchaseRecord, err := reader.Read()
+	if err != nil {
+		fmt.Println("CSV error:", err)
+		return
+	}
+	fmt.Println(purchaseRecord)
+
+	fmt.Println("Receipt ID:", purchaseRecord[0])
+	fmt.Println("Store:", purchaseRecord[2])
+	fmt.Println("Total EUR:", purchaseRecord[3])
+
+	amountCents, err := parseMoney(purchaseRecord[3])
+	if err != nil {
+		fmt.Println("Money parsing error:", err)
+		return
+	}
+	fmt.Println("Amount Cents:", amountCents)
 
 }
