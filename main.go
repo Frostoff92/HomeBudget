@@ -17,6 +17,8 @@ type Purchase struct {
 	AmountCents int64
 	Category    string
 	ExpenseType ExpenseType
+	SourceFile  string
+	Notes       string
 }
 
 type ExpenseType string
@@ -230,5 +232,83 @@ func main() {
 		return
 	}
 	fmt.Println("Amount Cents:", amountCents)
+
+	parsedDate, err := time.Parse("2006-01-02", purchaseRecord[1])
+	if err != nil {
+		fmt.Println("Date parsing error:", err)
+		return
+	}
+
+	fmt.Println("Parsed date:", parsedDate)
+
+	purchase := Purchase{
+		ID:          purchaseRecord[0],
+		Date:        parsedDate,
+		Store:       purchaseRecord[2],
+		AmountCents: amountCents,
+		Category:    purchaseRecord[4],
+		ExpenseType: ExpenseType(purchaseRecord[5]),
+		SourceFile:  purchaseRecord[6],
+		Notes:       purchaseRecord[7],
+	}
+	err = purchase.Validate()
+
+	if err != nil {
+		fmt.Println("Purchase validation failed:", err)
+		return
+	}
+
+	fmt.Println(purchase)
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		fmt.Println("CSV error:", err)
+		return
+	}
+	fmt.Println(len(records))
+
+	var importedPurchases []Purchase
+
+	for i, record := range records {
+		if i >= 5 {
+			break
+		}
+		if len(record) != 8 {
+			continue
+		}
+		parsedMoney, err := parseMoney(record[3])
+		if err != nil {
+			fmt.Println("Parsing money error", err)
+			continue
+		}
+		parsedDate, err := time.Parse("2006-01-02", record[1])
+		if err != nil {
+			fmt.Println("Date parsing error:", err)
+			continue
+		}
+
+		purchase := Purchase{
+			ID:          record[0],
+			Date:        parsedDate,
+			Store:       record[2],
+			AmountCents: parsedMoney,
+			Category:    record[4],
+			ExpenseType: ExpenseType(record[5]),
+			SourceFile:  record[6],
+			Notes:       record[7],
+		}
+
+		err = purchase.Validate()
+		if err != nil {
+			fmt.Println("Purchase validation error", record[0], err)
+			continue
+		}
+		importedPurchases = append(importedPurchases, purchase)
+
+		fmt.Println(purchase)
+	}
+
+	fmt.Println("Imported purchases:", len(importedPurchases))
+	fmt.Println("Imported total:", formatMoney(calculateTotal(importedPurchases)))
 
 }
