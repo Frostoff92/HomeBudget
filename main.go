@@ -249,51 +249,6 @@ func main() {
 	}
 	fmt.Println(record)
 
-	purchaseRecord, err := reader.Read()
-	if err != nil {
-		fmt.Println("CSV error:", err)
-		return
-	}
-	fmt.Println(purchaseRecord)
-
-	fmt.Println("Receipt ID:", purchaseRecord[0])
-	fmt.Println("Store:", purchaseRecord[2])
-	fmt.Println("Total EUR:", purchaseRecord[3])
-
-	amountCents, err := parseMoney(purchaseRecord[3])
-	if err != nil {
-		fmt.Println("Money parsing error:", err)
-		return
-	}
-	fmt.Println("Amount Cents:", amountCents)
-
-	parsedDate, err := time.Parse("2006-01-02", purchaseRecord[1])
-	if err != nil {
-		fmt.Println("Date parsing error:", err)
-		return
-	}
-
-	fmt.Println("Parsed date:", parsedDate)
-
-	purchase := Purchase{
-		ID:          purchaseRecord[0],
-		Date:        parsedDate,
-		Store:       purchaseRecord[2],
-		AmountCents: amountCents,
-		Category:    purchaseRecord[4],
-		ExpenseType: ExpenseType(purchaseRecord[5]),
-		SourceFile:  purchaseRecord[6],
-		Notes:       purchaseRecord[7],
-	}
-	err = purchase.Validate()
-
-	if err != nil {
-		fmt.Println("Purchase validation failed:", err)
-		return
-	}
-
-	fmt.Println(purchase)
-
 	records, err := reader.ReadAll()
 	if err != nil {
 		fmt.Println("CSV error:", err)
@@ -307,36 +262,13 @@ func main() {
 		if i >= 5 {
 			break
 		}
-		if len(record) != 8 {
-			continue
-		}
-		parsedMoney, err := parseMoney(record[3])
+
+		purchase, err := parsePurchase(record)
 		if err != nil {
-			fmt.Println("Parsing money error", err)
-			continue
-		}
-		parsedDate, err := time.Parse("2006-01-02", record[1])
-		if err != nil {
-			fmt.Println("Date parsing error:", err)
+			fmt.Println("Purchase parsing error:", err)
 			continue
 		}
 
-		purchase := Purchase{
-			ID:          record[0],
-			Date:        parsedDate,
-			Store:       record[2],
-			AmountCents: parsedMoney,
-			Category:    record[4],
-			ExpenseType: ExpenseType(record[5]),
-			SourceFile:  record[6],
-			Notes:       record[7],
-		}
-
-		err = purchase.Validate()
-		if err != nil {
-			fmt.Println("Purchase validation error", record[0], err)
-			continue
-		}
 		importedPurchases = append(importedPurchases, purchase)
 
 		fmt.Println(purchase)
