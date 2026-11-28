@@ -251,3 +251,54 @@ func TestParsePurchaseInvalidAmount(t *testing.T) {
 		t.Errorf("Expected error for amount must more than 0, got nil")
 	}
 }
+
+func TestIsEmptyRecordEmpty(t *testing.T) {
+	record := []string{
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+	}
+	result := isEmptyRecord(record)
+	if result != true {
+		t.Errorf("Expected true, got %t", result)
+	}
+}
+
+func TestIsEmptyRecordNonEmpty(t *testing.T) {
+	record := []string{
+		"TEST-001",
+		"2026-11-28",
+		"Lidl",
+		"12,50",
+		"groceries",
+		"regular",
+		"test.pdf",
+		"Test purchase",
+	}
+	result := isEmptyRecord(record)
+	if result != false {
+		t.Errorf("Expected false, got %t", result)
+	}
+}
+
+func TestIsEmptyRecordPartial(t *testing.T) {
+	record := []string{
+		"",
+		"",
+		"Lidl",
+		"",
+		"",
+		"",
+		"",
+		"",
+	}
+	result := isEmptyRecord(record)
+	if result != false {
+		t.Errorf("Expected false, got %t", result)
+	}
+}

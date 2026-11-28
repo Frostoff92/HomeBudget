@@ -186,51 +186,16 @@ func parsePurchase(record []string) (Purchase, error) {
 	return purchase, nil
 }
 
-func main() {
-	purchases := []Purchase{
-		{
-			ID:          "HB-000001",
-			Date:        time.Date(2026, 9, 19, 0, 0, 0, 0, time.Local),
-			Store:       "Lidl",
-			AmountCents: 1692,
-			Category:    "groceries",
-			ExpenseType: ExpenseRegular,
-		},
-		{
-			ID:          "HB-000002",
-			Date:        time.Date(2026, 9, 13, 0, 0, 0, 0, time.Local),
-			Store:       "Lidl",
-			AmountCents: 0,
-			Category:    "groceries",
-			ExpenseType: ExpenseRegular,
-		},
-		{
-			ID:          "HB-000003",
-			Date:        time.Date(2026, 9, 25, 0, 0, 0, 0, time.Local),
-			Store:       "Lidl",
-			AmountCents: 3064,
-			Category:    "groceries",
-			ExpenseType: ExpenseRegular,
-		},
-	}
-
-	fmt.Println(len(purchases))
-
-	fmt.Println("Total:", formatMoney(calculateTotal(purchases)))
-
-	fmt.Println("Lidl total:", formatMoney(calculateTotalStore(purchases, "Lidl")))
-
-	for _, purchase := range purchases {
-
-		err := purchase.Validate()
-
-		if err != nil {
-			fmt.Println("Validation error:", err)
-			continue
+func isEmptyRecord(record []string) bool {
+	for _, field := range record {
+		if field != "" {
+			return false
 		}
-
-		fmt.Println(purchase.ID)
 	}
+	return true
+}
+
+func main() {
 
 	file, err := os.Open("receipts.csv")
 	if err != nil {
@@ -242,39 +207,46 @@ func main() {
 	reader := csv.NewReader(file)
 	reader.Comma = ';'
 
-	record, err := reader.Read()
+	_, err = reader.Read()
 	if err != nil {
 		fmt.Println("CSV error:", err)
 		return
 	}
-	fmt.Println(record)
 
 	records, err := reader.ReadAll()
 	if err != nil {
 		fmt.Println("CSV error:", err)
 		return
 	}
-	fmt.Println(len(records))
 
 	var importedPurchases []Purchase
 
-	for i, record := range records {
-		if i >= 5 {
-			break
+	skippedPurchases := 0
+
+	emptyRecords := 0
+
+	for _, record := range records {
+
+		if isEmptyRecord(record) {
+			emptyRecords++
+			continue
 		}
 
 		purchase, err := parsePurchase(record)
 		if err != nil {
-			fmt.Println("Purchase parsing error:", err)
+			fmt.Printf("Purchase parsing error: %v, Record: %q\n", err, record)
+			skippedPurchases++
 			continue
 		}
 
 		importedPurchases = append(importedPurchases, purchase)
 
-		fmt.Println(purchase)
 	}
 
+	fmt.Println("Total CSV records:", len(records))
 	fmt.Println("Imported purchases:", len(importedPurchases))
+	fmt.Println("Skipped purchases:", skippedPurchases)
+	fmt.Println("Empty records:", emptyRecords)
 	fmt.Println("Imported total:", formatMoney(calculateTotal(importedPurchases)))
 
 }
