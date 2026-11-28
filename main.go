@@ -152,6 +152,40 @@ func parseMoney(value string) (int64, error) {
 	return amountCents, nil
 }
 
+func parsePurchase(record []string) (Purchase, error) {
+	if len(record) != 8 {
+		return Purchase{}, fmt.Errorf("Incorrect purchase")
+	}
+
+	parsedMoney, err := parseMoney(record[3])
+	if err != nil {
+		return Purchase{}, err
+	}
+
+	parsedDate, err := time.Parse("2006-01-02", record[1])
+	if err != nil {
+		return Purchase{}, err
+	}
+
+	purchase := Purchase{
+		ID:          record[0],
+		Date:        parsedDate,
+		Store:       record[2],
+		AmountCents: parsedMoney,
+		Category:    record[4],
+		ExpenseType: ExpenseType(record[5]),
+		SourceFile:  record[6],
+		Notes:       record[7],
+	}
+
+	err = purchase.Validate()
+	if err != nil {
+		return Purchase{}, err
+	}
+
+	return purchase, nil
+}
+
 func main() {
 	purchases := []Purchase{
 		{

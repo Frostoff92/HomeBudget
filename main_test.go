@@ -133,3 +133,121 @@ func TestParseMoneyPlusCents(t *testing.T) {
 		t.Error("expected error for plus cents, nil")
 	}
 }
+
+func TestParsePurchaseValid(t *testing.T) {
+	record := []string{
+		"TEST-001",
+		"2026-11-28",
+		"Lidl",
+		"12,50",
+		"groceries",
+		"regular",
+		"test.pdf",
+		"Test purchase",
+	}
+
+	purchase, err := parsePurchase(record)
+
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if purchase.AmountCents != 1250 {
+		t.Errorf("Expected 1250, got %d", purchase.AmountCents)
+	}
+
+	if purchase.ID != "TEST-001" {
+		t.Errorf("Expected ID TEST-001, got %s", purchase.ID)
+	}
+
+	if purchase.Store != record[2] {
+		t.Errorf("Expected store %s, got %s", record[2], purchase.Store)
+	}
+
+	if purchase.Category != record[4] {
+		t.Errorf("Expected category %s, got %s", record[4], purchase.Category)
+	}
+
+	if purchase.ExpenseType != ExpenseType(record[5]) {
+		t.Errorf("Unknown expense type %s, got %s", record[5], purchase.ExpenseType)
+	}
+
+	if purchase.SourceFile != record[6] {
+		t.Errorf("Not found source files %s, got %s", record[6], purchase.SourceFile)
+	}
+
+	if purchase.Notes != record[7] {
+		t.Errorf("Notes not found, but its not required, got %s", purchase.Notes)
+	}
+
+	if purchase.Date.Format("2006-01-02") != record[1] {
+		t.Errorf("Expected time %s, got %s", record[1], purchase.Date.Format("2006-01-02"))
+	}
+}
+
+func TestParsePurchaseInvalidLength(t *testing.T) {
+	record := []string{
+		"TEST-001",
+		"2026-11-28",
+		"Lidl",
+	}
+	_, err := parsePurchase(record)
+
+	if err == nil {
+		t.Errorf("Expected error for invalid record length, got nil")
+	}
+}
+
+func TestParsePurchaseInvalidMoney(t *testing.T) {
+	record := []string{
+		"TEST-001",
+		"2026-11-28",
+		"Lidl",
+		"abc",
+		"groceries",
+		"regular",
+		"test.pdf",
+		"Test purchase",
+	}
+	_, err := parsePurchase(record)
+
+	if err == nil {
+		t.Errorf("Expected error for invalid money, got nil")
+	}
+}
+
+func TestParsePurchaseInvalidDate(t *testing.T) {
+	record := []string{
+		"TEST-001",
+		"2026-02-30",
+		"Lidl",
+		"12,50",
+		"groceries",
+		"regular",
+		"test.pdf",
+		"Test purchase",
+	}
+	_, err := parsePurchase(record)
+
+	if err == nil {
+		t.Errorf("Expected error for invalid date, got nil")
+	}
+}
+
+func TestParsePurchaseInvalidAmount(t *testing.T) {
+	record := []string{
+		"TEST-001",
+		"2026-01-02",
+		"Lidl",
+		"0,00",
+		"groceries",
+		"regular",
+		"test.pdf",
+		"Test purchase",
+	}
+	_, err := parsePurchase(record)
+
+	if err == nil {
+		t.Errorf("Expected error for amount must more than 0, got nil")
+	}
+}
